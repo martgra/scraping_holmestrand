@@ -1,0 +1,12 @@
+# docker run -p 27017:27017 -d --name scraping-mongo mongo:latest
+version: '3'
+
+services:
+  mongo-db:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+  scraping:
+    image: scrapinghub/splash
+    ports:
+      - "8050:8050"
