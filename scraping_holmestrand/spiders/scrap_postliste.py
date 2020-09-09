@@ -6,10 +6,16 @@ from scrapy.exceptions import CloseSpider
 import datetime
 from scraping_holmestrand.items import ScrapingHolmestrandItem
 
+def _remove_colon(string_item):
+    return string_item.replace(":","")
+    
+
+
 def parse_list(li):
     return_list = []
     for i in li:
         typer = i.css("span::text").getall()
+        typer = list(map(_remove_colon, typer))
         verdi = i.css("strong::text").getall()
         verdi.insert(2,i.css("a.col-md-10::text").get())
         verdi = [" ".join(i.split()) for i in verdi]
