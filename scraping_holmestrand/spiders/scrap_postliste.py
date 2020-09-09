@@ -27,11 +27,8 @@ def parse_list(li):
 
 class InnsynsSpider(scrapy.Spider):
     name = "innsyn"
-
     def start_requests(self):
-        #urls = ["https://holmestrand.kommune.no/innsyn.aspx?response=journalpost_postliste&MId1=307&scripturi=/innsyn.aspx&skin=infolink&fradato=2020-08-31T00:00:00&startrow={}".format(i) for i in range(0, 200, 10)]
-        #urls = ["https://holmestrand.kommune.no/innsyn.aspx?response=journalpost_postliste&MId1=307&scripturi=/innsyn.aspx&skin=infolink&fradato=2020-08-31T00:00:00&startrow=0"]
-        urls = ["https://holmestrand.kommune.no/innsyn.aspx?response=journalpost_postliste&MId1=307&scripturi=/innsyn.aspx&skin=infolink&fradato=2020-09-02T00:00:00"]
+        urls = ["https://holmestrand.kommune.no/innsyn.aspx?response=journalpost_postliste&MId1=307&scripturi=/innsyn.aspx&skin=infolink&fradato={}T00:00:00".format(datetime.datetime.today().date())]
         for url in urls:
             yield SplashRequest(url, self.parse,
     args={
@@ -54,21 +51,22 @@ class InnsynsSpider(scrapy.Spider):
                 'wait': 1
             },
         )
-        page = response.url.split("/")[-2]
-        result = parse_list(response.css("li.i-jp"))
-        if result:
-            item = ScrapingHolmestrandItem()
-            item["body"] = result
-            yield item
-        if next_link.get():
-            print(next_link.css("::attr(href)").get())
-            yield SplashRequest("https://holmestrand.kommune.no{}".format(next_link.css("::attr(href)").get()), self.parse,
-            args={
-                # optional; parameters passed to Splash HTTP API
-                'wait': 1
-            },
-        )
-                        
         else:
-            print("DET FINNEs INGEN FLERE LINKER")
+            page = response.url.split("/")[-2]
+            result = parse_list(response.css("li.i-jp"))
+            if result:
+                item = ScrapingHolmestrandItem()
+                item["body"] = result
+                yield item
+            if next_link.get():
+                print(next_link.css("::attr(href)").get())
+                yield SplashRequest("https://holmestrand.kommune.no{}".format(next_link.css("::attr(href)").get()), self.parse,
+                args={
+                    # optional; parameters passed to Splash HTTP API
+                    'wait': 1
+                },
+            )
+                            
+            else:
+                print("DET FINNEs INGEN FLERE LINKER")
 
