@@ -6,8 +6,13 @@
 
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
-
+import json
 
 class ScrapingHolmestrandPipeline:
     def process_item(self, item, spider):
-        return item
+        print(item)
+        #print(item["liste"][1]["Journaldato"])
+
+        # with open(filename, 'a', encoding='utf8') as f:
+        #     json.dump(result, f, indent=4, ensure_ascii=False)
+        #return item

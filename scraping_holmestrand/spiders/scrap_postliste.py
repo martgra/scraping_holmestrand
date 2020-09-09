@@ -2,7 +2,9 @@ import scrapy
 import json
 import scrapy_splash
 from scrapy_splash import SplashRequest
-
+from scrapy.exceptions import CloseSpider
+import datetime
+from scraping_holmestrand.items import ScrapingHolmestrandItem
 
 def parse_list(li):
     return_list = []
@@ -17,31 +19,50 @@ def parse_list(li):
         return_list.append(result)
     return return_list
 
-class QuotesSpider(scrapy.Spider):
-    name = "quotes"
+class InnsynsSpider(scrapy.Spider):
+    name = "innsyn"
 
     def start_requests(self):
-        urls = ["https://holmestrand.kommune.no/innsyn.aspx?response=journalpost_postliste&MId1=307&scripturi=/innsyn.aspx&skin=infolink&fradato=2020-08-31T00:00:00"]
+        #urls = ["https://holmestrand.kommune.no/innsyn.aspx?response=journalpost_postliste&MId1=307&scripturi=/innsyn.aspx&skin=infolink&fradato=2020-08-31T00:00:00&startrow={}".format(i) for i in range(0, 200, 10)]
+        #urls = ["https://holmestrand.kommune.no/innsyn.aspx?response=journalpost_postliste&MId1=307&scripturi=/innsyn.aspx&skin=infolink&fradato=2020-08-31T00:00:00&startrow=0"]
+        urls = ["https://holmestrand.kommune.no/innsyn.aspx?response=journalpost_postliste&MId1=307&scripturi=/innsyn.aspx&skin=infolink&fradato=2020-09-02T00:00:00"]
         for url in urls:
             yield SplashRequest(url, self.parse,
     args={
         # optional; parameters passed to Splash HTTP API
-        'wait': 5
-
-        # 'url' is prefilled from request url
-        # 'http_method' is set to 'POST' for POST requests
-        # 'body' is set to request body for POST requests
+        'wait': 1
     },
-    #endpoint='render.json', # optional; default is render.html
-    #splash_url='<url>',     # optional; overrides SPLASH_URL
-    #slot_policy=scrapy_splash.SlotPolicy.PER_DOMAIN,  # optional
 )
 
+
+
     def parse(self, response):
+        next_link = response.xpath("//a[text() = 'neste']")
+        date = datetime.datetime.strptime(response.url.split("=")[5].split()[0].split("T")[0], '%Y-%m-%d') - datetime.timedelta(days=1)
+        print(date.date())
+        if "Det er ikke journalført noen dokument" in response.css("ul.i-jp").get():
+            print("https://holmestrand.kommune.no/innsyn.aspx?response=journalpost_postliste&MId1=307&scripturi=/innsyn.aspx&skin=infolink&fradato={}T00:00:00".format(date.date()))
+            yield SplashRequest("https://holmestrand.kommune.no/innsyn.aspx?response=journalpost_postliste&MId1=307&scripturi=/innsyn.aspx&skin=infolink&fradato={}T00:00:00".format(date.date()), self.parse,
+            args={
+                # optional; parameters passed to Splash HTTP API
+                'wait': 1
+            },
+        )
         page = response.url.split("/")[-2]
         result = parse_list(response.css("li.i-jp"))
-        
-        filename = 'postliste-%s.json' % page
-        with open(filename, 'w', encoding='utf8') as f:
-            json.dump(result, f, indent=4, ensure_ascii=False)
-        self.log('Saved file %s' % filename)
+        if result:
+            item = ScrapingHolmestrandItem()
+            item["body"] = result
+            yield item
+        if next_link.get():
+            print(next_link.css("::attr(href)").get())
+            yield SplashRequest("https://holmestrand.kommune.no{}".format(next_link.css("::attr(href)").get()), self.parse,
+            args={
+                # optional; parameters passed to Splash HTTP API
+                'wait': 1
+            },
+        )
+                        
+        else:
+            print("DET FINNEs INGEN FLERE LINKER")
+
