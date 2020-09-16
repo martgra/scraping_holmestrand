@@ -54,7 +54,7 @@ def search(collection, search_text, exact=False):
         for i in collection.find({"$text": {"$search": "\"{}\"".format(search_text)}}).limit(10):
             print(i)
     else:
-        for i in collection.find({"$text": {"$search": search_text}}).limit(10):
+        for i in collection.find({"$text": {"$search": search_text}}).limit(100):
             print(i)
     
 
@@ -62,7 +62,7 @@ if __name__=="__main__":
     client = get_client()
     db = get_database(client)
     collection = get_collection(db)
-    # collection.drop()
+    # # collection.drop()
     # collection = create_collection(db)
     # create_text_index(collection, [
     #         "Journaldato",
@@ -75,16 +75,6 @@ if __name__=="__main__":
     #         "Saksbehandler",
     #         "Tema"
     #         ])
-    # load_many_files(collection)
-    search(collection, "Karl Einar Haslestad", exact=True)
+    load_many_files(collection)
+    search(collection, "Make Sande Greit Again", exact=True)
     client.close()
-
-
-    "Journaldato",
-    "Sendt",
-    "Arkivsak",
-    "Brevdato",
-    "Dokumenttype",
-    "Ansvarlig",
-    "Saksbehandler",
-    "Tema"

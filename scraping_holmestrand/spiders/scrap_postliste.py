@@ -74,5 +74,9 @@ class InnsynsSpider(scrapy.Spider):
             )
                             
             else:
-                print("END OF DAY")
+                if str(date.date()) not in [i.split("_")[0] for i in sorted(os.listdir("scraping_reports"))[-3:]]:     
+                    # TODO: possible implementation of rescraping last three entries
+                    print("CONTINUE")
+                else:
+                    print("END OF DAY")
 
